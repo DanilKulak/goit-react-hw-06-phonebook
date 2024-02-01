@@ -1,19 +1,17 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import MyPhonebook from './MyPhonebook/PhonebookForm/MyPhonebook';
 
-class App extends Component {
 
-state = {
-  contacts: [],
-  name: "",
+const App = () => {
+
+const [contacts, setContacts] = useState([]);
+const [name, setName] = useState('');
+
+return (
+  <>
+  <MyPhonebook/>
+  </>
+)
 }
 
-  render() {
-    return (
-      <>
-      <MyPhonebook/>
-      </>
-    )
-  }
-}
 export default App;

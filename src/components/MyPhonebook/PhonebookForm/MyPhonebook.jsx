@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact, deleteContact, updateFilter } from '../../../redux/phonebookSlice';
+import { persistor } from '../../../redux/store';
 import PhonebookForm from './PhonebookForm/PhonebookForm';
 import PhonebookList from './PhonebookList/PhonebookList';
-import { nanoid } from 'nanoid';
 import { Container } from './MyPhonebook.styled';
+import { PersistGate } from 'redux-persist/integration/react';
+import { nanoid } from 'nanoid';
 
 const MyPhonebook = () => {
-  const [contacts, setContacts] = useState(() => {
-    const data = JSON.parse(localStorage.getItem('my-contacts'));
-    return data || [];
-  });
-  const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem('my-contacts', JSON.stringify(contacts));
-  }, [contacts]);
+  const dispatch = useDispatch();
+  const contacts = useSelector((state) => state.contacts);
+  const filter = useSelector((state) => state.filter);
 
   const isDuplicate = ({ name, number }) => {
     return contacts.some(
@@ -22,9 +21,8 @@ const MyPhonebook = () => {
         contact.number.toLowerCase() === number.toLowerCase()
     );
   };
-  
 
-  const addContact = (data) => {
+  const addContactHandler = (data) => {
     const { name, number } = data;
 
     if (isDuplicate({ name, number })) {
@@ -32,22 +30,15 @@ const MyPhonebook = () => {
       return;
     }
 
-    setContacts((prevContacts) => {
-      const newContact = {
-        id: nanoid(),
-        ...data,
-      };
-      return [...prevContacts, newContact];
-    });
+    dispatch(addContact({ id: nanoid(), ...data }));
   };
 
-
-  const deleteContact = (id) => {
-    setContacts((prevContacts) => prevContacts.filter((contact) => contact.id !== id));
+  const deleteContactHandler = (id) => {
+    dispatch(deleteContact(id));
   };
 
-  const changeFilter = ({ target }) => {
-    setFilter(target.value);
+  const changeFilterHandler = ({ target }) => {
+    dispatch(updateFilter(target.value));
   };
 
   const getFilteredContacts = () => {
@@ -66,14 +57,16 @@ const MyPhonebook = () => {
   const filteredContacts = getFilteredContacts();
 
   return (
-    <Container>
-      <h2>Phonebook</h2>
-      <PhonebookForm onSubmit={addContact} />
-      <div>
-        <input onChange={changeFilter} name="filter" placeholder="Search" />
-        <PhonebookList items={filteredContacts} deleteContact={deleteContact} />
-      </div>
-    </Container>
+    <PersistGate loading={null} persistor={persistor}>
+      <Container>
+        <h2>Phonebook</h2>
+        <PhonebookForm onSubmit={addContactHandler} />
+        <div>
+          <input onChange={changeFilterHandler} name="filter" placeholder="Search" />
+          <PhonebookList items={filteredContacts} deleteContact={deleteContactHandler} />
+        </div>
+      </Container>
+    </PersistGate>
   );
 };
 
